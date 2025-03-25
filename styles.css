@@ -1,0 +1,33 @@
+/* Arquivo: styles.css */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #333;
+}
+
+.toolbar {
+    margin-bottom: 10px;
+    background: white;
+    padding: 10px;
+    display: inline-block;
+    border-radius: 5px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+canvas {
+    border: 2px solid black;
+    image-rendering: pixelated;
+    display: block;
+    margin: auto;
+    background-color: white;
+}
+
+#colorPicker {
+    margin-left: 10px;
+}
