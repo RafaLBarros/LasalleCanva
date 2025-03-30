@@ -5,6 +5,7 @@ const height = 93;
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const colorPicker = document.getElementById("colorPicker");
+let uid = 0;
 
 canvas.width = width * pixelSize;
 canvas.height = height * pixelSize;
@@ -42,21 +43,32 @@ async function drawGrid() {
     }
 }
 
+// Adicionando evento de clique para login
+document.getElementById("loginBtn").addEventListener("click", async() => {
+    console.log("Clicou")
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    console.log(email,password)
+    console.log("window.login:", window.login);
+    if (window.login) {
+        console.log("entrou no if")
+        uid = await window.login(email, password);
+    }
+});
+
 canvas.addEventListener("click", async (event) => {
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((event.clientX - rect.left) / pixelSize);
     const y = Math.floor((event.clientY - rect.top) / pixelSize);
-    console.log(x,y)
-
     const color = colorPicker.value;
-
+    console.log(x,y,color,uid);
     try {
         const response = await fetch('/click', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ x, y, color }),
+            body: JSON.stringify({ x, y, color, uid}),
         });
 
         const data = await response.json();

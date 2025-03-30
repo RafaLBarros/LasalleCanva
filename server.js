@@ -2,7 +2,7 @@
 
 const express = require("express");
 const admin = require("firebase-admin");
-const cors = require("cors");
+const path = require("path");
 const serviceAccount = require("./firebase-key.json"); // Adicione seu arquivo de credenciais do Firebase
 
 admin.initializeApp({
@@ -11,25 +11,39 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const app = express();
+const usersCollection = db.collection("admins"); // Tabela de usuários admins
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const CLICK_TIMEOUT = 30000; // 30 segundos de cooldown por IP
+const CLICK_TIMEOUT = 10000; // 10 segundos de cooldown por IP
+
+// Função para verificar se um usuário é admin
+async function isAdmin(uid) {
+    const userDoc = await usersCollection.doc(uid).get();
+    return userDoc.exists && userDoc.data().isAdmin === true;
+
+}
 
 app.post("/click", async (req, res) => {
-    const { x, y, color } = req.body;
+    const { x, y, color, uid} = req.body;
     const ip = req.ip;
 
     if (!(x+1) || !(y+1) || !color) {
         return res.status(400).json({ error: "Dados inválidos" });
     }
-
     const ipRef = db.collection("clicks").doc(ip);
     const ipDoc = await ipRef.get();
     const now = Date.now();
 
-    if (ipDoc.exists && now - ipDoc.data().lastClick < CLICK_TIMEOUT) {
-        return res.status(429).json({ error: "Aguarde antes de clicar novamente." });
+    if(uid){
+        const adminStatus = await isAdmin(uid); // Verifica se o usuário é admin
+        if (!adminStatus && ipDoc.exists && now - ipDoc.data().lastClick < CLICK_TIMEOUT) {
+            return res.status(429).json({ error: "Aguarde antes de clicar novamente." });
+        }
+    }else{
+        if (ipDoc.exists && now - ipDoc.data().lastClick < CLICK_TIMEOUT) {
+            return res.status(429).json({ error: "Aguarde antes de clicar novamente." });
+        }
     }
 
     await ipRef.set({ lastClick: now });
