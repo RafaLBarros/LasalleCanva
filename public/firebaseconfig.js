@@ -4,16 +4,23 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https:/
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 // Configuração do Firebase (substitua com os dados do seu projeto)
+const firebaseConfig = apiString(); //Essa função é de um código chamado apiconfigsecret.js, que retorna os dados assim:
+/*
 const firebaseConfig = {
-    apiKey: "AIzaSyB6u1mGrKgd7oZPfY5TqE5FYr9eraGlP1A",
-    authDomain: "canva-lasalle.firebaseapp.com",
-    databaseURL: "https://canva-lasalle-default-rtdb.firebaseio.com",
-    projectId: "canva-lasalle",
-    storageBucket: "canva-lasalle.firebasestorage.app",
-    messagingSenderId: "1028330995532",
-    appId: "1:1028330995532:web:bd8756f778e8bb87f119e9",
-    measurementId: "G-EZ895WDHMR"
-  };
+    apiKey: "seus dados",
+    authDomain: "seus dados",
+    databaseURL: "seus dados",
+    projectId: "seus dados",
+    storageBucket: "seus dados",
+    messagingSenderId: "seus dados",
+    appId: "seus dados",
+    measurementId: "seus dados"
+};
+
+function apiString(){
+    return firebaseConfig;
+}
+*/
 
 // Inicializando Firebase
 const app = initializeApp(firebaseConfig);
