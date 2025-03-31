@@ -84,4 +84,6 @@ canvas.addEventListener("click", async (event) => {
     }
 });
 
+
+
 drawGrid();
