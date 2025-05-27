@@ -1,6 +1,8 @@
 // server.js - Servidor Node.js para gerenciar os cliques no Pixel Canvas
 
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const admin = require("firebase-admin");
 const path = require("path");
 const serviceAccount = require("./firebase-key.json"); // Adicione seu arquivo de credenciais do Firebase
@@ -11,6 +13,9 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server); // <- socket.io server
+
 const usersCollection = db.collection("admins"); // Tabela de usuários admins
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -51,6 +56,10 @@ app.post("/click", async (req, res) => {
     const clickRef = db.collection("pixels").doc(`${x}-${y}`);
     await clickRef.set({ x, y, color, timestamp: now });
 
+
+    // 🔥 Envia atualização para todos os clientes
+    io.emit("pixelUpdate", { x, y, color });
+
     res.json({ success: true });
 });
 
@@ -70,5 +79,9 @@ app.get('/pixels', async (req, res) => {
     }
 });
 
+io.on("connection", (socket) => {
+    console.log("Novo cliente conectado:", socket.id);
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+server.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

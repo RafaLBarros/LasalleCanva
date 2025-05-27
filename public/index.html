@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LaSalle Canva</title>
+    <title>InterArte</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,7 +13,10 @@
         <input type="password" id="password" placeholder="Senha">
         <button id="loginBtn">Login</button>
     </div>
-    <h1>LaSalle Canva</h1>
+    <div id="divTitulo">
+        <img src="/images/greendiv.png" id="imgTitulo">
+        <h1>InterArte</h1>
+    </div>
     <div class="toolbar">
         <label for="colorPicker">Escolha uma cor:</label>
         <input type="color" id="colorPicker" value="#000000">
@@ -22,6 +25,7 @@
         <canvas id="canvas"></canvas>
     </div>
     <script type="module" src="firebaseconfig.js"></script> 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
