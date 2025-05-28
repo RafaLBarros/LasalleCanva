@@ -1,3 +1,26 @@
+// Importando Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyB6u1mGrKgd7oZPfY5TqE5FYr9eraGlP1A",
+    authDomain: "canva-lasalle.firebaseapp.com",
+    databaseURL: "https://canva-lasalle-default-rtdb.firebaseio.com",
+    projectId: "canva-lasalle",
+    storageBucket: "canva-lasalle.firebasestorage.app",
+    messagingSenderId: "1028330995532",
+    appId: "1:1028330995532:web:bd8756f778e8bb87f119e9",
+    measurementId: "G-EZ895WDHMR"
+  };
+
+
+// Inicializando Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 /* Arquivo: script.js */
 const pixelSize = 10;
 const width = 180;
@@ -49,7 +72,6 @@ async function drawGrid() {
 
 // Adicionando evento de clique para login
 document.getElementById("loginBtn").addEventListener("click", async() => {
-    console.log("Clicou")
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
     if (window.login) {
@@ -66,14 +88,21 @@ canvas.addEventListener("mousedown", async (event) => {
 });
 
 // Evento para movimentar o mouse enquanto pressionado
+let lastPaintTime = 0;
+const paintInterval = 100; // ms
+
 canvas.addEventListener("mousemove", async (event) => {
-    if (window.isAdmin && isMouseDown) {
-        await handlePaint(event);
+  if (window.isAdmin && isMouseDown) {
+    const now = Date.now();
+    if (now - lastPaintTime > paintInterval) {
+      lastPaintTime = now;
+      await handlePaint(event);
     }
+  }
 });
 
 // Evento ao soltar o botão do mouse
-canvas.addEventListener("mouseup", () => {
+window.addEventListener("mouseup", () => {
     isMouseDown = false;
 });
 canvas.addEventListener("click", async (event) => {
@@ -81,7 +110,28 @@ canvas.addEventListener("click", async (event) => {
         await handlePaint(event);
     }
 });
+function showModalAlert(message) {
+  const modal = document.getElementById("modalAlert");
+  const modalMessage = document.getElementById("modalMessage");
+  const modalClose = document.getElementById("modalClose");
 
+  modalMessage.textContent = message;
+  modal.style.display = "flex";
+
+  function closeModal() {
+    modal.style.display = "none";
+    modalClose.removeEventListener("click", closeModal);
+  }
+
+  modalClose.addEventListener("click", closeModal);
+
+  // Fecha o modal ao clicar fora da caixa de mensagem
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  }, { once: true });
+}
 // Função de pintura individual
 async function handlePaint(event) {
     const rect = canvas.getBoundingClientRect();
@@ -90,12 +140,19 @@ async function handlePaint(event) {
     const color = colorPicker.value;
 
     try {
-        const response = await fetch('/click', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ x, y, color, uid }),
+        let headers = {
+            "Content-Type": "application/json",
+        };
+
+        const user = auth.currentUser;
+        if (user) {
+            const token = await user.getIdToken();
+            headers.Authorization = `Bearer ${token}`;
+        }
+        const response = await fetch("/click", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ x, y, color }),
         });
 
         const data = await response.json();
@@ -104,7 +161,7 @@ async function handlePaint(event) {
             ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
         } else {
             console.warn(data.error);
-            alert(data.error);
+            showModalAlert(data.error);
         }
     } catch (error) {
         console.error('Erro:', error);
@@ -112,10 +169,6 @@ async function handlePaint(event) {
 }
 
 
-async function atualizarPagina(){
-    console.log("atualizei a pagina");
-    await drawGrid();
-}
 drawGrid();
 const socket = io(); // conecta com o servidor
 

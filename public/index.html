@@ -24,8 +24,16 @@
     <div class="canvas-container">
         <canvas id="canvas"></canvas>
     </div>
+
+
+    <div id="modalAlert" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="modalClose" class="modal-close">&times;</span>
+            <p id="modalMessage"></p>
+        </div>
+    </div>
     <script type="module" src="firebaseconfig.js"></script> 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

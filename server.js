@@ -1,5 +1,5 @@
+console.log("Servidor INICIADO");
 // server.js - Servidor Node.js para gerenciar os cliques no Pixel Canvas
-
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -30,22 +30,34 @@ async function isAdmin(uid) {
 }
 
 app.post("/click", async (req, res) => {
-    const { x, y, color, uid} = req.body;
+    const { x, y, color } = req.body;
     const ip = req.ip;
+    const authHeader = req.headers.authorization;
 
-    if (!(x+1) || !(y+1) || !color) {
+    if (!(x + 1) || !(y + 1) || !color) {
         return res.status(400).json({ error: "Dados inválidos" });
     }
+
+    let isAdmin = false;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+        const idToken = authHeader.split(" ")[1];
+        try {
+            const decodedToken = await admin.auth().verifyIdToken(idToken);
+            const uid = decodedToken.uid;
+
+            const userDoc = await db.collection("admins").doc(uid).get();
+            isAdmin = userDoc.exists && userDoc.data().isAdmin === true;
+        } catch (error) {
+            console.error("Token inválido:", error);
+            return res.status(401).json({ error: "Token inválido" });
+        }
+    }
+
     const ipRef = db.collection("clicks").doc(ip);
     const ipDoc = await ipRef.get();
     const now = Date.now();
 
-    if(uid){
-        const adminStatus = await isAdmin(uid); // Verifica se o usuário é admin
-        if (!adminStatus && ipDoc.exists && now - ipDoc.data().lastClick < CLICK_TIMEOUT) {
-            return res.status(429).json({ error: "Aguarde antes de clicar novamente." });
-        }
-    }else{
+    if (!isAdmin) {
         if (ipDoc.exists && now - ipDoc.data().lastClick < CLICK_TIMEOUT) {
             return res.status(429).json({ error: "Aguarde antes de clicar novamente." });
         }
@@ -56,8 +68,6 @@ app.post("/click", async (req, res) => {
     const clickRef = db.collection("pixels").doc(`${x}-${y}`);
     await clickRef.set({ x, y, color, timestamp: now });
 
-
-    // 🔥 Envia atualização para todos os clientes
     io.emit("pixelUpdate", { x, y, color });
 
     res.json({ success: true });
@@ -84,4 +94,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+server.listen(PORT, "0.0.0.0",() => console.log(`Servidor rodando na porta ${PORT}`));

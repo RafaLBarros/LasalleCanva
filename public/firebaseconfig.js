@@ -27,13 +27,18 @@ window.isAdmin = false;
 window.login = async function login(email, senha) {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-        console.log("Login bem-sucedido:", userCredential.user);
-        alert("Login bem-sucedido: ",userCredential.user);
+        const user = userCredential.user;
+        console.log("Login bem-sucedido:", user);
+        alert("Login bem-sucedido: " + user.email);
         const isAdmin = await checkAdmin(user);
         window.isAdmin = isAdmin;
     } catch (error) {
         console.error("Erro no login:", error.message);
-        alert("Erro no login: ",error.message);
+        // Expressão regular para extrair o trecho entre parênteses
+        const match = error.message.match(/\((.*?)\)/);
+        const errorCode = match ? match[1] : "erro-desconhecido";
+
+        alert(`Erro no login: ${errorCode}`);
     }
 }
 
