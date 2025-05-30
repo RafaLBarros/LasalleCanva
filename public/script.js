@@ -172,7 +172,45 @@ async function handlePaint(event) {
 drawGrid();
 const socket = io(); // conecta com o servidor
 
-socket.on("pixelUpdate", ({ x, y, color }) => {
+let lastSnapshotTime = 0;
+const snapshotInterval = 2000; // 2 segundos pra não lotar
+
+socket.on("pixelUpdate", async ({ x, y, color }) => {
     ctx.fillStyle = color;
     ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+
+    if (window.isAdmin) {
+        const now = Date.now();
+        if (now - lastSnapshotTime > snapshotInterval) {
+            lastSnapshotTime = now;
+            const dataURL = canvas.toDataURL("image/png");
+
+            // Extrair só o base64
+            const base64Data = dataURL.replace(/^data:image\/png;base64,/, "");
+
+            try {
+                await fetch("/saveSnapshot", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image: base64Data }),
+                });
+            } catch (err) {
+                console.error("Erro ao enviar snapshot:", err);
+            }
+        }
+    }
+
 });
+
+function adjustCanvasScale() {
+    const container = document.querySelector(".canvas-container");
+    const scaleX = container.clientWidth / canvas.width;
+    const scaleY = window.innerHeight / canvas.height;
+    const scale = Math.min(scaleX, scaleY, 1); // nunca ultrapassa o tamanho original
+    canvas.style.transform = `scale(${scale})`;
+    canvas.style.transformOrigin = "top left";
+}
+
+// Chamar no início e sempre que redimensionar a janela
+window.addEventListener("resize", adjustCanvasScale);
+window.addEventListener("load", adjustCanvasScale);

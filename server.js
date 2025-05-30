@@ -7,6 +7,9 @@ const admin = require("firebase-admin");
 const path = require("path");
 const serviceAccount = require("./firebase-key.json"); // Adicione seu arquivo de credenciais do Firebase
 
+const fs = require("fs");
+const snapshotsDir = path.join(__dirname, "snapshots");
+
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
@@ -18,7 +21,6 @@ const io = new Server(server); // <- socket.io server
 
 const usersCollection = db.collection("admins"); // Tabela de usuários admins
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 const CLICK_TIMEOUT = 10000; // 10 segundos de cooldown por IP
 
@@ -88,6 +90,33 @@ app.get('/pixels', async (req, res) => {
         res.status(500).json({ error: "Erro ao buscar pixels" });
     }
 });
+
+if (!fs.existsSync(snapshotsDir)) {
+    fs.mkdirSync(snapshotsDir);
+}
+app.post("/saveSnapshot", async (req, res) => {
+    try {
+        const { image } = req.body;
+        if (!image) return res.status(400).json({ error: "Imagem não fornecida" });
+
+        const filename = `snapshot-${Date.now()}.png`;
+        const filePath = path.join(snapshotsDir, filename);
+
+        // Salva a imagem base64 no arquivo
+        fs.writeFile(filePath, image, "base64", (err) => {
+            if (err) {
+                console.error("Erro ao salvar snapshot:", err);
+                return res.status(500).json({ error: "Erro ao salvar snapshot" });
+            }
+            res.json({ success: true });
+        });
+    } catch (error) {
+        console.error("Erro na rota saveSnapshot:", error);
+        res.status(500).json({ error: "Erro interno do servidor" });
+    }
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 io.on("connection", (socket) => {
     console.log("Novo cliente conectado:", socket.id);

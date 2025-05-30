@@ -1,4 +1,6 @@
 /* Arquivo: styles.css */
+
+
 body {
     font-family: monospace, sans-serif;
     background-image:url("/images/Cloud_Background.png");
@@ -85,7 +87,7 @@ canvas {
     display: block;
     margin-top: 20px; /* Espaçamento entre a barra e o canvas */
     /* Nenhuma modificação no tamanho do canvas */
-    margin-left: auto;  /* Garante que o canvas seja centralizado */
+    margin-left: auto;  
     margin-right: auto; /* Garante que o canvas seja centralizado */
 }
 
@@ -98,6 +100,7 @@ canvas {
     margin-top: 20px; /* Espaçamento entre a barra e o canvas */
     
 }
+
 
 #divTitulo {
     position:relative;
